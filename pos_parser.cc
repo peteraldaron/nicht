@@ -1,6 +1,8 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <algorithm>
+#include <iterator>
 #include <tuple>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -22,11 +24,15 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
     unordered_set<pos_parser::household_id > b_house;
     unordered_set<pos_parser::person_id> b_person;
     for (const auto &filenames: filenames_by_day) {
-        const auto aggregated_transactions = process_day(filenames, blacklist, prod_meta, profit_all, margin_all,
+        auto aggregated_transactions = process_day(filenames, blacklist, prod_meta, profit_all, margin_all,
                                                          sbu, b_house, b_person, only_meta);
-        if (!only_meta && aggregated_transactions.size()) {
+        if (!only_meta) {
+            std::cout<<time_str<<"Writing to file "<<output_files[day_count]<<std::endl;
             std::ofstream outstream(output_files[day_count++]);
-            outstream << aggregated_transactions;
+            std::copy(std::istreambuf_iterator<char>(aggregated_transactions),
+                      std::istreambuf_iterator<char>(),
+                      std::ostreambuf_iterator<char>(outstream));
+            //outstream << aggregated_transactions;
         }
     }
     return std::make_tuple(prod_meta, profit_all, margin_all, sbu, b_house, b_person);
@@ -38,11 +44,16 @@ PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 PYBIND11_MAKE_OPAQUE(std::vector<int>);
 PYBIND11_MAKE_OPAQUE(std::vector<float>);
 PYBIND11_MAKE_OPAQUE(pos_parser::string_map);
+PYBIND11_MAKE_OPAQUE(pos_parser::metadata_map);
+PYBIND11_MAKE_OPAQUE(pos_parser::profit_map);
 
 PYBIND11_MODULE(_pos_parser, m)
 {
     using namespace pos_parser;
     py::bind_vector<std::vector<std::string> >(m, "StrVector");
+    py::bind_map<pos_parser::string_map>(m, "string_map");
+    py::bind_vector<pos_parser::profit_map>(m, "profit_map");
+    py::bind_map<pos_parser::metadata_map>(m, "metadat_map");
     m.def("process_day", process_day, "Process files for one day",
           py::return_value_policy::reference);
 

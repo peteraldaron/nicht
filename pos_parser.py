@@ -59,7 +59,7 @@ def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/K
     for day in _paginate_by_day(filenames):
         # save_path: str = f'{parsed_receipt_save_to_path}/{timeutil.find_datelike_substr(day[0])}.tsv.lz4'
         daily_files = StrVector(download_and_decompress(day))
-        _pos_parser.load([daily_files], StrVector(["/tmp/out1"]), StrVector())
+        _pos_parser.load([daily_files], StrVector(["/tmp/out1", "/tmp/out2"]), StrVector(), False)
 
 
 process_raw_data(date_offset=dt.timedelta(days=-1))

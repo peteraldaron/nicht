@@ -1,1 +1,2 @@
+pybind11
 -e "git+ssh://git@github.com/kesko-dev/kai-common.git#egg=kai-common[base,mq]"

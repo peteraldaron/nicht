@@ -152,6 +152,8 @@ namespace pos_parser {
         output.reserve(400'000);
         profit.reserve(400'000);
         margin.reserve(400'000);
+        std::cout<<time_str<<"Processing "<<filename<<std::endl;
+        int line_count = 0;
         while (std::getline(fstr, line)) {
             fields.clear();
             if (0 == std::strncmp(PLUSSA_HEADER.c_str(), line.c_str(), PLUSSA_HEADER.size())) {
@@ -210,7 +212,10 @@ namespace pos_parser {
                         .sales_quantity = stof(fields[SALES_QUANTITY]),
                         .receipt_date = fields[RECEIPT_DATE]});
             }
+            line_count++;
         }
+        std::remove(filename.c_str());
+        std::cout<<time_str<<"\t"<<filename<<"\t"<<line_count<<std::endl;
         return std::make_tuple(output, profit, margin, sbu_map, metadata_map,
                                blacklisted_household, blacklisted_person);
     }
@@ -266,8 +271,6 @@ namespace pos_parser {
             t4.join();
             t5.join();
         }
-        string transaction_file;
-        transaction_data >> transaction_file;
-        return transaction_file;
+        return transaction_data;
     }
 }
