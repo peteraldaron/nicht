@@ -42,6 +42,7 @@ PYBIND11_MAKE_OPAQUE(pos_parser::string_map);
 PYBIND11_MODULE(_pos_parser, m)
 {
     using namespace pos_parser;
+    py::bind_vector<std::vector<std::string> >(m, "StrVector");
     m.def("process_day", process_day, "Process files for one day",
           py::return_value_policy::reference);
 

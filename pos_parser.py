@@ -9,6 +9,7 @@ from kai_common.fs import fs
 from typing import List, Generator, Any, Tuple, Iterable, Callable
 from itertools import groupby
 from operator import itemgetter
+from _pos_parser import StrVector
 import _pos_parser
 
 logger = logging.getLogger('model')
@@ -57,8 +58,8 @@ def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/K
     logger.warning(f'Total files: {len(filenames)}, Starting filename: {filenames[0]}')
     for day in _paginate_by_day(filenames):
         # save_path: str = f'{parsed_receipt_save_to_path}/{timeutil.find_datelike_substr(day[0])}.tsv.lz4'
-        daily_files = download_and_decompress(day)
-        _pos_parser.load([daily_files], ["/tmp/out1"], [])
+        daily_files = StrVector(download_and_decompress(day))
+        _pos_parser.load([daily_files], StrVector(["/tmp/out1"]), StrVector())
 
 
 process_raw_data(date_offset=dt.timedelta(days=-1))
