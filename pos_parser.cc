@@ -9,12 +9,16 @@
 #include <pybind11/stl_bind.h>
 #include "pos_parser.h"
 
+namespace py = pybind11;
 
 auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
           const std::vector<std::string> &output_files,
           const std::vector<std::string> &blacklist_vector,
-          const bool only_meta = false) {
+          const bool only_meta = false)
+{
     using namespace pos_parser;
+    py::object _py_parse_helper = py::module::import("parse_helper");
+    py::object _py_download_func = _py_parse_helper.attr("download_and_decompress");
     unordered_set<string> blacklist(blacklist_vector.begin(), blacklist_vector.end());
     unordered_map<pos_parser::EAN , product_metadata> prod_meta;
     int day_count = 0;
@@ -24,8 +28,13 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
     unordered_set<pos_parser::household_id > b_house;
     unordered_set<pos_parser::person_id> b_person;
     for (const auto &filenames: filenames_by_day) {
+        vector<string> download_names;
+        py::list downloaded_files = _py_download_func(filenames);
+        for (auto it = downloaded_files.begin(); it != downloaded_files.end(); ++it) {
+            py::str a(*it);
+        }
         auto aggregated_transactions = process_day(filenames, blacklist, prod_meta, profit_all, margin_all,
-                                                         sbu, b_house, b_person, only_meta);
+                                                   sbu, b_house, b_person, only_meta);
         if (!only_meta) {
             std::cout<<time_str<<"Writing to file "<<output_files[day_count]<<std::endl;
             std::ofstream outstream(output_files[day_count++]);
@@ -38,7 +47,6 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
     return std::make_tuple(prod_meta, profit_all, margin_all, sbu, b_house, b_person);
 }
 
-namespace py = pybind11;
 
 PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 PYBIND11_MAKE_OPAQUE(std::vector<int>);
