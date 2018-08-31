@@ -30,10 +30,10 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
     for (const auto &filenames: filenames_by_day) {
         vector<string> download_names;
         py::list downloaded_files = _py_download_func(filenames);
-        for (auto it = downloaded_files.begin(); it != downloaded_files.end(); ++it) {
-            py::str a(*it);
+        for (auto file: downloaded_files) {
+            download_names.push_back(string(py::reinterpret_steal<py::str>(file)));
         }
-        auto aggregated_transactions = process_day(filenames, blacklist, prod_meta, profit_all, margin_all,
+        auto aggregated_transactions = process_day(download_names, blacklist, prod_meta, profit_all, margin_all,
                                                    sbu, b_house, b_person, only_meta);
         if (!only_meta) {
             std::cout<<time_str<<"Writing to file "<<output_files[day_count]<<std::endl;
@@ -41,7 +41,6 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
             std::copy(std::istreambuf_iterator<char>(aggregated_transactions),
                       std::istreambuf_iterator<char>(),
                       std::ostreambuf_iterator<char>(outstream));
-            //outstream << aggregated_transactions;
         }
     }
     return std::make_tuple(prod_meta, profit_all, margin_all, sbu, b_house, b_person);

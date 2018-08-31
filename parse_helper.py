@@ -31,5 +31,3 @@ def download_and_decompress(paths: List[str]) -> List[str]:
     decompressed_data_generator = map(compression.decompress, boto_wrapper.s3_batch_download(paths))
     with ThreadPoolExecutor(max_workers=16) as ex:
         return list(ex.map(partial(to_file, dir_name), enumerate(decompressed_data_generator)))
-
-

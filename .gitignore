@@ -1,0 +1,6 @@
+env/
+rapidjson/
+*.so
+*.a
+cmake-*/
+.idea/
