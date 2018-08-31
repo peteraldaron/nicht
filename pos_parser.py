@@ -33,7 +33,7 @@ def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/K
     filenames = sorted([key[0] for key in all_files_in_path
                         if start_date.date() <= timeutil.find_datelike_substr(key[0]) <= end_date.date()])
     logger.warning(f'Total files: {len(filenames)}, Starting filename: {filenames[0]}')
-    paginated_file_names = _paginate_by_day(filenames)
+    paginated_file_names = [StrVector(day) for day in _paginate_by_day(filenames)]
     aggregated_pos_save_paths = [f'/tmp/{timeutil.find_datelike_substr(day[0])}' for day in paginated_file_names]
     # save_path: str = f'{parsed_receipt_save_to_path}/{timeutil.find_datelike_substr(day[0])}.tsv.lz4'
     _pos_parser.load(paginated_file_names, StrVector(aggregated_pos_save_paths), StrVector(), False)

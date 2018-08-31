@@ -23,8 +23,8 @@ def to_file(dir_name: str, seq_data: Tuple[int, bytes]) -> str:
     return f'{dir_name}/{seq}.tsv'
 
 
-def download_and_decompress(paths: List[str]) -> List[str]:
-    dir_name = fs.get_tempdir().name
+def download_and_decompress(paths: List[str], override_dir: str = None) -> List[str]:
+    dir_name = override_dir or fs.get_tempdir().name
     print(f'Using temp dir {dir_name}')
     if not os.path.exists(dir_name):
         os.makedirs(dir_name, exist_ok=True)
