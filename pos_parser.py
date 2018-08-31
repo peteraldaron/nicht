@@ -31,6 +31,18 @@ PRODUCT_METADATA_KEYS = [
         'producthierarchylevel5name']
 
 
+def _get_blacklist_contact_ids() -> List[str]:
+    BLACKLIST_PATH_PREFIX = 's3://kesko-aws-data-import/pdata/KEDW_GDPR_AWS_FILE_20'
+    all_files_in_path = boto_wrapper.s3_list(BLACKLIST_PATH_PREFIX)
+    latest_filename = sorted([key[0] for key in all_files_in_path
+                              if timeutil.find_datelike_substr(key[0]) > dt.date(2018, 6, 10)])[-1]
+    logger.warning(f'Reading blacklist from file {latest_filename}')
+    fsio = s3.s3()
+    blacklist = [line.split(b'|')[0].decode() for line in fsio.get_object(latest_filename).splitlines()[1:]]
+    logger.warning(f'#{len(blacklist)} users loaded from blacklist')
+    return blacklist
+
+
 def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/KEDW_AWS_POS_DTL_201',
                      parsed_receipt_save_to_path: str = 's3://kai-receipt-data-test',
                      metadata_save_to_path: str = 's3://kai-data-test/metadata',
@@ -53,8 +65,7 @@ def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/K
     aggregated_pos_save_paths = [f'/tmp/{timeutil.find_datelike_substr(day[0])}.tsv' for day in paginated_file_names]
     # save_path: str = f'{parsed_receipt_save_to_path}/{timeutil.find_datelike_substr(day[0])}.tsv.lz4'
     prod, profit, margin, sbu, bh, bp = _pos_parser.load(paginated_file_names, StrVector(aggregated_pos_save_paths),
-                                                         StrVector(), parsed_receipt_save_to_path, False)
-    #return _pos_parser.load(paginated_file_names, StrVector(aggregated_pos_save_paths), StrVector(), False)
+                                                         StrVector(_get_blacklist_contact_ids()), parsed_receipt_save_to_path, False)
     profit_dict = defaultdict(dict)
     margin_dict = defaultdict(dict)
     product_metadata_dict = defaultdict(dict)
@@ -70,12 +81,12 @@ def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/K
             product_metadata_dict[str(entry[0])][key.upper()] = getattr(entry[1], key)
 
     fsio.put_object(f'{metadata_save_to_path}/product_metadata.json', data=json.dumps(product_metadata_dict).encode())
-    fsio.put_object(f'{metadata_save_to_path}/sbu_map.json', data=json.dumps(sbu).encode())
     fsio.put_object(f'{metadata_save_to_path}/profit.json', data=json.dumps(profit_dict).encode())
     fsio.put_object(f'{metadata_save_to_path}/margin.json', data=json.dumps(margin_dict).encode())
+    fsio.put_object(f'{metadata_save_to_path}/sbu_map.json', data=json.dumps(dict(sbu.items())).encode())
     fsio.put_object(f'{metadata_save_to_path}/household_blacklist.json', data=json.dumps(list(bh)).encode())
     fsio.put_object(f'{metadata_save_to_path}/person_blacklist.json', data=json.dumps(list(bp)).encode())
 
 process_raw_data(parsed_receipt_save_to_path='s3://kai-receipt-data-staging/testfolder',
                  metadata_save_to_path='s3://kai-data-staging/metadata',
-                 date_offset=dt.timedelta(days=-1))
+                 date_offset=dt.timedelta(days=-100))
