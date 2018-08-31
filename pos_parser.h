@@ -273,14 +273,15 @@ namespace pos_parser {
         }
         return transaction_data;
     }
+
     vector<string> download_and_decompress(const vector<string> &remote_paths, const string save_to) {
         vector<std::future<string>> futures;
         vector<string> retval;
         auto download_and_decompress = [](const string &path, const string &dest_folder, const int seq) {
             std::system((string("aws s3 cp ") + path + string(" ") + dest_folder
                          + string("/") + std::to_string(seq) + string(".csv.gz")).c_str());
-            std::system((string("gunzip " + dest_folder
-                                + string("/") + std::to_string(seq) + string(".csv.gz"))).c_str());
+            std::system((string("gunzip ") + dest_folder
+                                + string("/") + std::to_string(seq) + string(".csv.gz")).c_str());
             return dest_folder + string("/") + std::to_string(seq) + string(".csv");
         };
 
@@ -292,6 +293,16 @@ namespace pos_parser {
             retval.push_back(f.get());
         }
         return retval;
+    }
+
+    int compress_and_upload(const string &local_path, const string &remote_path_prefix) {
+        std::cout << time_str << "Compressing file " << local_path << std::endl;
+        std::system((string("lz4 -9 --rm -f ") + local_path).c_str());
+        const auto local_file = local_path + string(".lz4");
+        std::system((string("aws s3 cp ") + local_file + string(" ") + remote_path_prefix + string("/")).c_str());
+        std::remove(local_path.c_str());
+        std::remove(local_file.c_str());
+        return 0;
     }
 }
 

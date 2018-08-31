@@ -14,6 +14,7 @@ namespace py = pybind11;
 auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
           const std::vector<std::string> &output_files,
           const std::vector<std::string> &blacklist_vector,
+          const std::string &write_to_path,
           const bool only_meta = false)
 {
     using namespace pos_parser;
@@ -21,6 +22,7 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
     py::object _py_download_func = _py_parse_helper.attr("download_and_decompress");
     unordered_set<string> blacklist(blacklist_vector.begin(), blacklist_vector.end());
     unordered_map<pos_parser::EAN , product_metadata> prod_meta;
+    std::vector<std::future<int>> futures;
     int day_count = 0;
     profit_map profit_all;
     profit_map margin_all;
@@ -37,13 +39,16 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
         auto aggregated_transactions = process_day(download_names, blacklist, prod_meta, profit_all, margin_all,
                                                    sbu, b_house, b_person, only_meta);
         if (!only_meta) {
-            std::cout<<time_str<<"Writing to file "<<output_files[day_count]<<std::endl;
+            std::cout << time_str << "Writing to file " << output_files[day_count] << std::endl;
             std::ofstream outstream(output_files[day_count++]);
             std::copy(std::istreambuf_iterator<char>(aggregated_transactions),
                       std::istreambuf_iterator<char>(),
                       std::ostreambuf_iterator<char>(outstream));
+            futures.push_back(std::async(std::launch::async, compress_and_upload,
+                              output_files[day_count - 1], write_to_path));
         }
     }
+    wait_on_futures(futures);
     return std::make_tuple(prod_meta, profit_all, margin_all, sbu, b_house, b_person);
 }
 
