@@ -273,4 +273,25 @@ namespace pos_parser {
         }
         return transaction_data;
     }
+    vector<string> download_and_decompress(const vector<string> &remote_paths, const string save_to) {
+        vector<std::future<string>> futures;
+        vector<string> retval;
+        auto download_and_decompress = [](const string &path, const string &dest_folder, const int seq) {
+            std::system((string("aws s3 cp ") + path + string(" ") + dest_folder
+                         + string("/") + std::to_string(seq) + string(".csv.lz4")).c_str());
+            std::system((string("lz4 -d --rm -f " + dest_folder
+                                + string("/") + std::to_string(seq) + string(".csv.lz4"))).c_str());
+            return dest_folder + string("/") + std::to_string(seq) + string(".csv");
+        };
+
+        for (int i = 0; i < remote_paths.size(); ++i) {
+            futures.push_back(std::async(std::launch::async, download_and_decompress, remote_paths[i], save_to, i));
+        }
+        wait_on_futures(futures);
+        for (auto &f: futures) {
+            retval.push_back(f.get());
+        }
+        return retval;
+    }
 }
+
