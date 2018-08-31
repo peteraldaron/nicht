@@ -300,7 +300,6 @@ namespace pos_parser {
         std::system((string("lz4 -9 --rm -f ") + local_path).c_str());
         const auto local_file = local_path + string(".lz4");
         std::system((string("aws s3 cp ") + local_file + string(" ") + remote_path_prefix + string("/")).c_str());
-        std::remove(local_path.c_str());
         std::remove(local_file.c_str());
         return 0;
     }
