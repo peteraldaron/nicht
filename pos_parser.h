@@ -278,9 +278,9 @@ namespace pos_parser {
         vector<string> retval;
         auto download_and_decompress = [](const string &path, const string &dest_folder, const int seq) {
             std::system((string("aws s3 cp ") + path + string(" ") + dest_folder
-                         + string("/") + std::to_string(seq) + string(".csv.lz4")).c_str());
-            std::system((string("lz4 -d --rm -f " + dest_folder
-                                + string("/") + std::to_string(seq) + string(".csv.lz4"))).c_str());
+                         + string("/") + std::to_string(seq) + string(".csv.gz")).c_str());
+            std::system((string("gunzip " + dest_folder
+                                + string("/") + std::to_string(seq) + string(".csv.gz"))).c_str());
             return dest_folder + string("/") + std::to_string(seq) + string(".csv");
         };
 
