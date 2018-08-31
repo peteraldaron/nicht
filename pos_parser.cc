@@ -28,11 +28,11 @@ auto load(const std::vector<std::vector<std::string> > &filenames_by_day,
     unordered_set<pos_parser::household_id > b_house;
     unordered_set<pos_parser::person_id> b_person;
     for (const auto &filenames: filenames_by_day) {
-        auto download_names = download_and_decompress(filenames, "/tmp");
-        // py::list downloaded_files = _py_download_func(filenames);
-        // for (auto file: downloaded_files) {
-        //     download_names.push_back(string(py::reinterpret_steal<py::str>(file)));
-        // }
+        vector<string> download_names;
+        py::list downloaded_files = _py_download_func(filenames);
+        for (auto file: downloaded_files) {
+            download_names.push_back(string(py::reinterpret_steal<py::str>(file)));
+        }
         auto aggregated_transactions = process_day(download_names, blacklist, prod_meta, profit_all, margin_all,
                                                    sbu, b_house, b_person, only_meta);
         if (!only_meta) {
