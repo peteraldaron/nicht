@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(rapidjson)
 include_directories(env/include/python3.7m env/include/site/python3.7 rapidjson/include)
 
-add_executable(dp2 pos_parser.cc pos_parser.h)
+add_executable(dp2 pos_parser.cc pos_parser.h parse.cc)

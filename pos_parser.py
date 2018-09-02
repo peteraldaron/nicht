@@ -12,8 +12,8 @@ from typing import List, Generator, Any, Tuple, Iterable, Callable
 from itertools import groupby
 from operator import itemgetter
 from parse_helper import _paginate_by_day
-from _pos_parser import StrVector
-import _pos_parser
+#from _pos_parser import StrVector
+#import _pos_parser
 
 logger = logging.getLogger('model')
 PRODUCT_METADATA_KEYS = [
@@ -31,7 +31,7 @@ PRODUCT_METADATA_KEYS = [
         'producthierarchylevel5name']
 
 
-def _get_blacklist_contact_ids() -> List[str]:
+def get_blacklist_contact_ids() -> List[str]:
     BLACKLIST_PATH_PREFIX = 's3://kesko-aws-data-import/pdata/KEDW_GDPR_AWS_FILE_20'
     all_files_in_path = boto_wrapper.s3_list(BLACKLIST_PATH_PREFIX)
     latest_filename = sorted([key[0] for key in all_files_in_path
@@ -43,6 +43,24 @@ def _get_blacklist_contact_ids() -> List[str]:
     return blacklist
 
 
+def get_paginated_day_paths_from_source():
+    source_data_path: str = 's3://kesko-aws-data-import/pdata/KEDW_AWS_POS_DTL_201'
+    date_origin: dt.datetime = dt.datetime.today()
+    date_offset: dt.timedelta = dt.timedelta(days=-100)
+    all_files_in_path = boto_wrapper.s3_list(source_data_path)
+    date_destination = date_origin + date_offset
+
+    start_date = min(date_origin, date_destination)
+    end_date = max(date_origin, date_destination)
+    logger.warning(f'Starting pos data parsing for {date_offset.days} days, '
+                   f'starting {timeutil.to_iso_date_string(date_origin)}')
+
+    filenames = sorted([key[0] for key in all_files_in_path
+                        if start_date.date() <= timeutil.find_datelike_substr(key[0]) <= end_date.date()])
+    paginated_file_names = [day for day in _paginate_by_day(filenames)]
+    return paginated_file_names
+
+'''
 def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/KEDW_AWS_POS_DTL_201',
                      parsed_receipt_save_to_path: str = 's3://kai-receipt-data-test',
                      metadata_save_to_path: str = 's3://kai-data-test/metadata',
@@ -86,7 +104,7 @@ def process_raw_data(source_data_path: str = 's3://kesko-aws-data-import/pdata/K
     fsio.put_object(f'{metadata_save_to_path}/sbu_map.json', data=json.dumps(dict(sbu.items())).encode())
     fsio.put_object(f'{metadata_save_to_path}/household_blacklist.json', data=json.dumps(list(bh)).encode())
     fsio.put_object(f'{metadata_save_to_path}/person_blacklist.json', data=json.dumps(list(bp)).encode())
-
-process_raw_data(parsed_receipt_save_to_path='s3://kai-receipt-data-staging/testfolder',
-                 metadata_save_to_path='s3://kai-data-staging/metadata',
-                 date_offset=dt.timedelta(days=-100))
+'''
+#process_raw_data(parsed_receipt_save_to_path='s3://kai-receipt-data-staging/testfolder',
+#                 metadata_save_to_path='s3://kai-data-staging/metadata',
+#                 date_offset=dt.timedelta(days=-100))
