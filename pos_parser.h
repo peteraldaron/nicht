@@ -117,6 +117,7 @@ namespace pos_parser {
         EAN ean;
         double sales_price;
         double sales_quantity;
+        uint32_t site_id;
         string receipt_date;
     };
 
@@ -210,6 +211,7 @@ namespace pos_parser {
                         .ean = stoul(fields[EAN_CODE]),
                         .sales_price = stof(fields[SALES_PRICE]),
                         .sales_quantity = stof(fields[SALES_QUANTITY]),
+                        .site_id = static_cast<uint32_t>(stoul(fields[SITE_ID])),
                         .receipt_date = fields[RECEIPT_DATE]});
             }
             line_count++;
@@ -248,6 +250,7 @@ namespace pos_parser {
                                  << transline.ean << '\t'
                                  << transline.sales_price << '\t'
                                  << transline.sales_quantity << '\t'
+                                 << transline.site_id << '\t'
                                  << transline.receipt_date << '\n';
             }
             std::thread t0([](profit_map &accum, profit_map &val) {

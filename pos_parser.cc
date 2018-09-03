@@ -92,12 +92,13 @@ PYBIND11_MODULE(_pos_parser, m)
 
     py::class_<pos_parser::transaction_data>(m, "transaction_data")
             .def(py::init<const household_id &, const person_id &, const EAN &,
-                    const double, const double, const string & >())
+                    const double, const double, const uint32_t, const string & >())
             .def_readwrite("household", &transaction_data::household)
             .def_readwrite("person", &transaction_data::person)
             .def_readwrite("ean", &transaction_data::ean)
             .def_readwrite("sales_price", &transaction_data::sales_price)
             .def_readwrite("sales_quantity", &transaction_data::sales_quantity)
+            .def_readwrite("site_id", &transaction_data::site_id)
             .def_readwrite("receipt_date", &transaction_data::receipt_date);
 }
 
