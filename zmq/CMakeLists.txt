@@ -30,7 +30,7 @@ ExternalProject_Add(
 
 include_directories(${EXTERNAL_INSTALL_LOCATION}/include /usr/local/include)
 
-add_executable(zmqpubsub main.cpp)
+add_executable(zmqpubsub main.cpp connection_types.h message.h)
 add_dependencies(zmqpubsub fmt cppzmq)
 
-target_link_libraries(zmqpubsub ${ZeroMQ_LIBRARY} ${EXTERNAL_INSTALL_LOCATION}/lib/libfmt.a)
+target_link_libraries(zmqpubsub ${ZeroMQ_LIBRARY} ${EXTERNAL_INSTALL_LOCATION}/lib64/libfmt.a)
